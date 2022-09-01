@@ -12,6 +12,24 @@ def connect_to_db(host_name, dbname, username, password, port):
         return conn
 
 
+def create_table_statement(dataframe, table_name):
+    replacements = {
+        'timedelta64[ns]': 'varchar',
+        'object': 'varchar',
+        'float64': 'float',
+        'int64': 'int',
+        'datetime64': 'timestamp'
+    }
+    column_string = ''
+    for column, dtype in zip(dataframe.columns, dataframe.dtypes.replace(replacements)):
+        column_string += '{} {},'.format(column, dtype)
+
+    table_statement = 'create table if not exists {} ({})'.format(
+        table_name, column_string)
+
+    return table_statement
+
+
 def create_table(curr):
     create_table_command = ("""CREATE TABLE IF NOT EXISTS sets (
                     set_num VARCHAR(255) PRIMARY KEY,
