@@ -20,9 +20,8 @@ def create_table_statement(dataframe, table_name):
         'int64': 'int',
         'datetime64': 'timestamp'
     }
-    column_string = ''
-    for column, dtype in zip(dataframe.columns, dataframe.dtypes.replace(replacements)):
-        column_string += '{} {},'.format(column, dtype)
+    column_string = ", ".join("{} {}".format(column, dtype) for (
+        column, dtype) in zip(dataframe.columns, dataframe.dtypes.replace(replacements)))
 
     table_statement = 'create table if not exists {} ({})'.format(
         table_name, column_string)
@@ -30,22 +29,15 @@ def create_table_statement(dataframe, table_name):
     return table_statement
 
 
-def create_table(curr):
-    create_table_command = ("""CREATE TABLE IF NOT EXISTS sets (
-                    set_num VARCHAR(255) PRIMARY KEY,
-                    name TEXT,
-                    year INTEGER,
-                    theme_id INTEGER,
-                    num_parts INTEGER,
-                    set_img_url TEXT,
-    )""")
+def create_table(curr, table_statment):
+    create_table_command = table_statment
 
     curr.execute(create_table_command)
 
 
-def check_if_row_exists(curr, set_num):
-    query = ("""SELECT set_num FROM sets WHERE set_num = %s""")
-    curr.execute(query, (set_num,))
+def check_if_row_exists(curr, record, column, table_name):
+    query = ("""SELECT {} FROM {} WHERE {} = %s""").format(column, table_name, column)
+    curr.execute(query, (record,))
 
     return curr.fetchone() is not None
 
@@ -69,7 +61,7 @@ def update_db(curr, df):
         columns=['set_num', 'name', 'year', 'theme_id', 'num_parts', 'set_img_url'])
 
     for i, row in df.iterrows():
-        if check_if_row_exists(curr, row['set_num']):
+        if check_if_row_exists(curr, row['set_num'], 'set_num', 'sets'):
             update_row(curr, row['name'], row['year'],
                        row['theme_id'], row['num_parts'], row['set_img_url'])
         else:
