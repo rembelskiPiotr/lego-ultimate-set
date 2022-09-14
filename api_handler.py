@@ -18,5 +18,5 @@ def get_df_from_api(endpoint, API_KEY, page_size):
         response = requests.get(next_url).json()
         df = pd.concat([df, pd.json_normalize(response, 'results')])
         next_url = response['next']
-        time.sleep(1)
+        time.sleep(0.5)
     return df

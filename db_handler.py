@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 import psycopg2 as ps
 import pandas as pd
 
@@ -85,7 +86,10 @@ def append_from_df_to_db_sets(curr, df):
 
 
 def insert_into_table_themes(curr,dataframe):
-    insert_statement = ("""INSERT INTO themes (id, parent_id, name) VALUES(%s, %s, %s)""")
+    insert_statement = ("""INSERT INTO themes (id, parent_id, name) VALUES(%s, %s, '%s');""")
     for i, row in dataframe.iterrows():
-        rows_to_insert = (row['id'], row['parent_id'], row['name'])
-        curr.execute(insert_statement, rows_to_insert)
+        id = "NULL" if str(row['id']) == 'nan' else row['id']
+        parent_id = "NULL" if str(row['parent_id']) == 'nan' else row['parent_id']
+        name = "NULL" if str(row['name']) == 'nan' else row['name'].replace("'", "''")
+        rows_to_insert = (id, parent_id, name)
+        curr.execute(insert_statement % rows_to_insert)
